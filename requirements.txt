@@ -3,3 +3,7 @@ matplotlib
 pandas
 numpy
 scikit-learn
+statsmodels
+prophet
+tensorflow
+nltk
