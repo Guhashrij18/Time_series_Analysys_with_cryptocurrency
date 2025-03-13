@@ -6,7 +6,6 @@ import requests
 # ---- Cache the Live Bitcoin Price ----
 @st.cache_data(ttl=60*5)  # Cache for 5 minutes (300 seconds)
 def get_current_bitcoin_price():
-    # Fetch live Bitcoin price from CoinGecko API
     url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
     response = requests.get(url)
     data = response.json()
@@ -14,10 +13,10 @@ def get_current_bitcoin_price():
 
 # ---- Load Data ----
 try:
-    # Load Bitcoin Price Data (assuming 'Date' and 'Price' columns)
+    # Load Bitcoin Price Data
     df_prices = pd.read_csv("bitcoin_prices.csv", parse_dates=["Date"], index_col="Date")
 
-    # Load Forecasting Data (ARIMA, LSTM, Prophet)
+    # Load Forecasting Data
     df_arima = pd.read_csv("arima_forecast.csv", parse_dates=["Date"], index_col="Date")
     df_lstm = pd.read_csv("lstm_forecast.csv", parse_dates=["Date"], index_col="Date")
     df_prophet = pd.read_csv("prophet_forecast.csv", parse_dates=["Date"], index_col="Date")
@@ -25,27 +24,27 @@ try:
     # Load Sentiment Data
     df_sentiment = pd.read_csv("crypto_sentiment.csv")
 
-    # Filter the last 100 days of Bitcoin price data
-    df_last_100_days = df_prices.tail(100)
-
-    # Fetch live Bitcoin price using the API (this will be cached for 5 minutes)
+    # Fetch Current Bitcoin Price (this will be cached for 5 minutes)
     current_bitcoin_price = get_current_bitcoin_price()
 
     # ---- Streamlit UI ----
-    st.title("Cryptocurrency Price Forecasting & Sentiment Analysis")
+    st.title("📈 Cryptocurrency Price Forecasting & Sentiment Analysis")
     st.write("Analyze Bitcoin trends using ARIMA, LSTM, Prophet, and sentiment analysis from Twitter.")
 
     # ---- Current Bitcoin Price ----
     st.subheader("Current Bitcoin Price (USD)")
+
+    # Display live Bitcoin price in default color, center-aligned
     st.markdown(f"<h2 style='text-align: left; font-weight: bold;'>${current_bitcoin_price:,.2f}</h2>", unsafe_allow_html=True)
 
-    # ---- Bitcoin Price Data for the Last 100 Days ----
-    st.subheader("Bitcoin Price Trend (Last 100 Days)")
-    st.line_chart(df_last_100_days["Price"])
-
-    # Show Raw Bitcoin Price Data (Last 100 Days)
+    # ---- Bitcoin Price Data for Last 100 Days ----
     st.subheader("Bitcoin Price Data (Last 100 Days)")
-    st.write(df_last_100_days.tail())  # Show last few rows of the filtered price data
+    
+    # Filter the last 100 rows of Bitcoin price data
+    df_last_100_days = df_prices.tail(100)
+
+    # Show last 100 days Bitcoin price data as a table
+    st.dataframe(df_last_100_days)
 
     # ---- ARIMA Forecast ----
     st.subheader("ARIMA Model Prediction")
@@ -75,9 +74,9 @@ try:
     st.subheader("Crypto Market Sentiment Analysis")
     st.write("Sentiment analysis of Bitcoin-related tweets.")
 
-    # Show Sentiment Data Preview
+    # Show Sentiment Data
     st.subheader("Sentiment Data Preview")
-    st.write(df_sentiment.head())  # Show first few tweets & sentiment scores
+    st.write(df_sentiment.head())  # Show first few tweets & scores
 
     # Calculate Sentiment Distribution
     positive_tweets = len(df_sentiment[df_sentiment["Sentiment Score"] > 0])
