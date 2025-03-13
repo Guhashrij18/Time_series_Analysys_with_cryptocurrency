@@ -61,33 +61,29 @@ try:
     else:
         st.error("⚠️ Prophet forecast data does not contain 'Date' and 'Forecast' columns!")
 
-    # ---- Forecasting Period Selection ----
-    st.subheader("⏳ Choose Forecasting Period")
-    forecast_days = st.slider("Select number of days to forecast", min_value=30, max_value=180, step=30, value=60)
-
     # ---- ARIMA Forecast ----
-    st.subheader(f"🔮 ARIMA Model Prediction for {forecast_days} Days")
+    st.subheader(f"🔮 ARIMA Model Prediction")
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
-    ax.plot(df_arima.index[:forecast_days], df_arima["Forecast"].iloc[:forecast_days], label="ARIMA Forecast", linestyle="dashed", color="red")
+    ax.plot(df_arima.index, df_arima["Forecast"], label="ARIMA Forecast", linestyle="dashed", color="red")
     ax.legend()
     st.pyplot(fig)
 
     # ---- LSTM Forecast ----
-    st.subheader(f"🤖 LSTM Model Prediction for {forecast_days} Days")
+    st.subheader(f"🤖 LSTM Model Prediction")
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
-    ax.plot(df_lstm.index[:forecast_days], df_lstm["Forecast"].iloc[:forecast_days], label="LSTM Forecast", linestyle="dashed", color="green")
+    ax.plot(df_lstm.index, df_lstm["Forecast"], label="LSTM Forecast", linestyle="dashed", color="green")
     ax.legend()
     st.pyplot(fig)
 
     # ---- Prophet Forecast (Fixed) ----
-    st.subheader(f"🔥 Prophet Model Prediction for {forecast_days} Days")
+    st.subheader(f"🔥 Prophet Model Prediction")
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
 
     if not df_prophet.empty and "Forecast" in df_prophet.columns:
-        ax.plot(df_prophet.index[:forecast_days], df_prophet["Forecast"].iloc[:forecast_days], label="Prophet Forecast", linestyle="dashed", color="purple")
+        ax.plot(df_prophet.index, df_prophet["Forecast"], label="Prophet Forecast", linestyle="dashed", color="purple")
     else:
         st.error("⚠️ Prophet forecast data is empty or missing 'Forecast' column!")
 
