@@ -2,13 +2,8 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import requests
-import openai
 import os
 from dotenv import load_dotenv
-
-# ---- Load Environment Variables ----
-load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 
 # ---- Load Data Function ----
@@ -139,29 +134,3 @@ if df_sentiment is not None:
     # Display Filtered Tweets
     st.subheader(f"📢 {sentiment_filter} Tweets")
     st.write(filtered_df[["Tweet", "Sentiment Score"]])
-
-# ---- AI Chatbot for Bitcoin Analysis ----
-st.subheader("🤖 Bitcoin AI Chatbot")
-st.write(f"{bool(OPENAI_API_KEY)}")
-
-if not OPENAI_API_KEY:
-    st.error("⚠️ OpenAI API key is missing! Set it as an environment variable or in a `.env` file.")
-else:
-    def ask_chatbot(prompt):
-        """Function to query OpenAI's chatbot."""
-        try:
-            api_key = "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"  # Replace with your real key
-            client = openai.OpenAI(api_key=api_key)
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": prompt}]
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            return f"⚠️ OpenAI API Error: {str(e)}"
-
-    # Get user input for chatbot
-    user_input = st.text_input("💬 Ask anything about Bitcoin...")
-    if user_input:
-        answer = ask_chatbot(user_input)
-        st.write(answer)
