@@ -141,7 +141,7 @@ if df_sentiment is not None:
 
 # ---- AI Chatbot for Bitcoin Analysis ----
 st.subheader("🤖 Bitcoin AI Chatbot")
-st.write(f"🔑 OpenAI API Key Loaded: {bool(OPENAI_API_KEY)}")
+st.write(f"{bool(OPENAI_API_KEY)}")
 
 if not OPENAI_API_KEY:
     st.error("⚠️ OpenAI API key is missing! Set it as an environment variable or in a `.env` file.")
