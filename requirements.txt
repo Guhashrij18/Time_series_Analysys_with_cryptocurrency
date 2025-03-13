@@ -10,3 +10,4 @@ nltk
 wordcloud
 openai
 python-dotenv
+load_dotenv
