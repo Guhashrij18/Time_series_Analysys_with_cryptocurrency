@@ -19,12 +19,17 @@ try:
     st.title("Cryptocurrency Price Forecasting & Sentiment Analysis")
     st.write("This dashboard shows Bitcoin price trends, forecasts, and sentiment analysis.")
 
+    # ----  Bitcoin Price Data Table ----
+    st.subheader("Bitcoin Price Data")
+    st.write("Below is the raw Bitcoin price data used for analysis:")
+    st.dataframe(df_prices.tail(100))  # Show last 100 rows of price data
+
     # ---- Bitcoin Price Trend ----
     st.subheader("Bitcoin Price Trend")
     st.line_chart(df_prices["Price"])
 
     # ---- ARIMA Forecast ----
-    st.subheader("ARIMA Model Prediction")
+    st.subheader("🔮 ARIMA Model Prediction")
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(df_prices.index, df_prices["Price"], label="Actual Price", color="blue")
     ax.plot(df_arima.index, df_arima["Forecast"], label="ARIMA Forecast", linestyle="dashed", color="red")
@@ -52,7 +57,7 @@ try:
     st.write("Sentiment analysis of Bitcoin-related tweets.")
 
     # Show Sentiment Data
-    st.subheader("Sentiment Data Preview")
+    st.subheader("🔍 Sentiment Data Preview")
     st.write(df_sentiment.head())  # Show first few tweets & scores
 
     # Calculate Sentiment Distribution
@@ -80,4 +85,3 @@ try:
 
 except FileNotFoundError as e:
     st.error(f"Error loading data: {e}")
-
