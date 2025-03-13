@@ -52,15 +52,14 @@ try:
     # ---- Load Forecasting Data ----
     df_arima = pd.read_csv("arima_forecast.csv", parse_dates=["Date"], index_col="Date")
     df_lstm = pd.read_csv("lstm_forecast.csv", parse_dates=["Date"], index_col="Date")
-    df_prophet = pd.read_csv("prophet_forecast.csv", parse_dates=["Date"], index_col="Date")
+    df_prophet = pd.read_csv("prophet_forecast.csv")
 
     # ---- Fix Prophet Model Data ----
     if "Date" in df_prophet.columns and "Forecast" in df_prophet.columns:
-        df_prophet.rename(columns={"Date": "ds", "Forecast": "yhat"}, inplace=True)
-        df_prophet["ds"] = pd.to_datetime(df_prophet["ds"])  # Convert Date column
-        df_prophet.set_index("ds", inplace=True)  # Set Date as index
+        df_prophet["Date"] = pd.to_datetime(df_prophet["Date"])  # Convert Date column to DateTime
+        df_prophet.set_index("Date", inplace=True)  # Set Date as index
     else:
-        st.error("⚠️ Prophet forecast data is missing required columns: 'Date' and 'Forecast'.")
+        st.error("⚠️ Prophet forecast data does not contain 'Date' and 'Forecast' columns!")
 
     # ---- Forecasting Period Selection ----
     st.subheader("⏳ Choose Forecasting Period")
@@ -87,10 +86,10 @@ try:
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
 
-    if "yhat" in df_prophet.columns:
-        ax.plot(df_prophet.index[:forecast_days], df_prophet["yhat"].iloc[:forecast_days], label="Prophet Forecast", linestyle="dashed", color="purple")
+    if not df_prophet.empty and "Forecast" in df_prophet.columns:
+        ax.plot(df_prophet.index[:forecast_days], df_prophet["Forecast"].iloc[:forecast_days], label="Prophet Forecast", linestyle="dashed", color="purple")
     else:
-        st.error("⚠️ Prophet forecast column 'yhat' not found!")
+        st.error("⚠️ Prophet forecast data is empty or missing 'Forecast' column!")
 
     ax.legend()
     st.pyplot(fig)
