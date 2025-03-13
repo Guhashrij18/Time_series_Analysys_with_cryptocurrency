@@ -1,111 +1,83 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import requests
 
-# ---- Streamlit UI ----
-st.title("📈 Cryptocurrency Price Forecasting & Sentiment Analysis")
+# Load Data Files
+price_file = "bitcoin_prices.csv"
+prophet_forecast_file = "prophet_forecast.csv"
+arima_forecast_file = "arima_forecast.csv"
+lstm_forecast_file = "lstm_forecast.csv"
+sentiment_file = "sentiment_analysis.csv"
 
-# ---- Fetch Live Bitcoin Price ----
-st.subheader("💰 Live Bitcoin Price (USD)")
+st.title("📈 Cryptocurrency Analysis Dashboard")
 
-def get_live_price():
-    """Fetches the current Bitcoin price from CoinGecko API."""
-    try:
-        url = "https://api.coingecko.com/api/v3/simple/price"
-        params = {"ids": "bitcoin", "vs_currencies": "usd"}
-        response = requests.get(url, params=params)
-        response.raise_for_status()  # Raise error for bad response
-        return response.json()["bitcoin"]["usd"]
-    except requests.RequestException:
-        return None
-
-live_price = get_live_price()
-if live_price:
-    st.metric(label="Current Bitcoin Price (USD)", value=f"${live_price}")
-else:
-    st.error("⚠️ Failed to fetch live price. Try again later.")
-
-# ---- Load Bitcoin Price Data ----
-st.subheader("📋 Bitcoin Price Data (Last 100 Days)")
-
+### 📌 LIVE BITCOIN PRICE ###
 try:
-    df_prices = pd.read_csv("bitcoin_prices.csv", parse_dates=["Date"], index_col="Date")
-    st.dataframe(df_prices.tail(100))  # Show last 100 rows
+    df_prices = pd.read_csv(price_file, parse_dates=["Date"], index_col="Date")
+    st.subheader("💰 Live Bitcoin Price (USD)")
+    latest_price = df_prices["Price"].iloc[-1]
+    st.metric(label="Current Bitcoin Price", value=f"${latest_price:,.2f}")
 
-    # ---- Bitcoin Price Trend ----
-    st.subheader("📊 Bitcoin Price Trend")
-    st.line_chart(df_prices["Price"])
+    st.subheader("📉 Bitcoin Price Trend (Last 100 Days)")
+    st.line_chart(df_prices["Price"].tail(100))
 
-    # ---- Moving Averages ----
-    st.subheader("📈 Bitcoin Price with Moving Averages")
-    df_prices["SMA_50"] = df_prices["Price"].rolling(window=50).mean()
-    df_prices["EMA_20"] = df_prices["Price"].ewm(span=20, adjust=False).mean()
-    
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df_prices.index, df_prices["Price"], label="Bitcoin Price", color="blue")
-    ax.plot(df_prices.index, df_prices["SMA_50"], label="50-day SMA", linestyle="dashed", color="red")
-    ax.plot(df_prices.index, df_prices["EMA_20"], label="20-day EMA", linestyle="dashed", color="green")
-    ax.legend()
-    st.pyplot(fig)
+except Exception as e:
+    st.error(f"⚠️ Error loading Bitcoin price data: {e}")
 
-    # ---- Load Forecasting Data ----
-    df_arima = pd.read_csv("arima_forecast.csv", parse_dates=["Date"], index_col="Date")
-    df_lstm = pd.read_csv("lstm_forecast.csv", parse_dates=["Date"], index_col="Date")
-    df_prophet = pd.read_csv("prophet_forecast.csv")
+### 📌 PROPHET FORECAST ###
+try:
+    df_prophet = pd.read_csv(prophet_forecast_file)
+    df_prophet['Date'] = pd.to_datetime(df_prophet['Date'])
 
-    # ---- Fix Prophet Model Data ----
-    if "Date" in df_prophet.columns and "Forecast" in df_prophet.columns:
-        df_prophet["Date"] = pd.to_datetime(df_prophet["Date"])  # Convert Date column to DateTime
-        df_prophet.set_index("Date", inplace=True)  # Set Date as index
-    else:
-        st.error("⚠️ Prophet forecast data does not contain 'Date' and 'Forecast' columns!")
+    st.subheader("📊 Bitcoin Price Forecast (Prophet)")
+    st.line_chart(df_prophet.set_index("Date").tail(100))
 
-    # ---- ARIMA Forecast ----
-    st.subheader(f"🔮 ARIMA Model Prediction")
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
-    ax.plot(df_arima.index, df_arima["Forecast"], label="ARIMA Forecast", linestyle="dashed", color="red")
-    ax.legend()
-    st.pyplot(fig)
+    st.write("🔍 Prophet Forecast Data Preview")
+    st.dataframe(df_prophet.head())
 
-    # ---- LSTM Forecast ----
-    st.subheader(f"🤖 LSTM Model Prediction")
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
-    ax.plot(df_lstm.index, df_lstm["Forecast"], label="LSTM Forecast", linestyle="dashed", color="green")
-    ax.legend()
-    st.pyplot(fig)
+except Exception as e:
+    st.error(f"⚠️ Error loading Prophet forecast data: {e}")
 
-    # ---- Prophet Forecast (Fixed) ----
-    st.subheader(f"🔥 Prophet Model Prediction")
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
+### 📌 ARIMA FORECAST ###
+try:
+    df_arima = pd.read_csv(arima_forecast_file)
+    df_arima['Date'] = pd.to_datetime(df_arima['Date'])
 
-    if not df_prophet.empty and "Forecast" in df_prophet.columns:
-        ax.plot(df_prophet.index, df_prophet["Forecast"], label="Prophet Forecast", linestyle="dashed", color="purple")
-    else:
-        st.error("⚠️ Prophet forecast data is empty or missing 'Forecast' column!")
+    st.subheader("📊 Bitcoin Price Forecast (ARIMA)")
+    st.line_chart(df_arima.set_index("Date").tail(100))
 
-    ax.legend()
-    st.pyplot(fig)
+    st.write("🔍 ARIMA Forecast Data Preview")
+    st.dataframe(df_arima.head())
 
-    # ---- Load Sentiment Data ----
-    df_sentiment = pd.read_csv("crypto_sentiment.csv")
+except Exception as e:
+    st.error(f"⚠️ Error loading ARIMA forecast data: {e}")
 
-    # ---- Sentiment Analysis ----
-    st.subheader("📢 Crypto Market Sentiment Analysis")
+### 📌 LSTM FORECAST ###
+try:
+    df_lstm = pd.read_csv(lstm_forecast_file)
+    df_lstm['Date'] = pd.to_datetime(df_lstm['Date'])
 
-    # Show Sentiment Data
-    st.subheader("🔍 Sentiment Data Preview")
-    st.write(df_sentiment.head())
+    st.subheader("📊 Bitcoin Price Forecast (LSTM)")
+    st.line_chart(df_lstm.set_index("Date").tail(100))
 
-    # Dropdown to Filter Tweets
-    sentiment_filter = st.selectbox("🔍 Select Sentiment to View Tweets", ["All", "Positive", "Neutral", "Negative"])
-    filtered_df = df_sentiment[df_sentiment["Sentiment Score"] > 0] if sentiment_filter == "Positive" else \
-                  df_sentiment[df_sentiment["Sentiment Score"] < 0] if sentiment_filter == "Negative" else \
-                  df_sentiment[df_sentiment["Sentiment Score"] == 0] if sentiment_filter == "Neutral" else df_sentiment
-    st.write(filtered_df[["Tweet", "Sentiment Score"]])
+    st.write("🔍 LSTM Forecast Data Preview")
+    st.dataframe(df_lstm.head())
 
-except FileNotFoundError as e:
-    st.error(f"❌ Error loading data: {e}")
+except Exception as e:
+    st.error(f"⚠️ Error loading LSTM forecast data: {e}")
+
+### 📌 SENTIMENT ANALYSIS ###
+try:
+    df_sentiment = pd.read_csv(sentiment_file)
+    sentiment_counts = df_sentiment['Sentiment'].value_counts()
+
+    st.subheader("🗣️ Bitcoin Sentiment Analysis")
+    st.bar_chart(sentiment_counts)
+
+    st.write("🔍 Sentiment Data Preview")
+    st.dataframe(df_sentiment.head())
+
+except Exception as e:
+    st.error(f"⚠️ Error loading sentiment data: {e}")
+
+st.write("This dashboard provides Bitcoin price trends, forecasts using Prophet, ARIMA, and LSTM, and sentiment analysis.")
