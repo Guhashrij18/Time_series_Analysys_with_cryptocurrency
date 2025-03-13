@@ -10,15 +10,30 @@ from dotenv import load_dotenv
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# ---- Load Data ----
+# ---- Load Data Function ----
 def load_data(filename):
-    """Loads a CSV file into a DataFrame."""
+    """Loads a CSV file into a DataFrame with error handling."""
     try:
-        return pd.read_csv(filename, parse_dates=["Date"], index_col="Date")
+        df = pd.read_csv(filename)
+        st.write(f"✅ Successfully loaded `{filename}`")
+        
+        # Check if "Date" column exists
+        if "Date" not in df.columns:
+            st.error(f"⚠️ `{filename}` does not have a 'Date' column! Available columns: {list(df.columns)}")
+            return None
+        
+        df["Date"] = pd.to_datetime(df["Date"])  # Convert to datetime
+        df.set_index("Date", inplace=True)  # Set Date as index
+        return df
+
     except FileNotFoundError:
-        st.error(f"❌ Error: File `{filename}` not found.")
+        st.error(f"❌ Error: `{filename}` not found! Please check the file path.")
+        return None
+    except Exception as e:
+        st.error(f"❌ Error while loading `{filename}`: {str(e)}")
         return None
 
+# ---- Load All Data ----
 df_prices = load_data("bitcoin_prices.csv")
 df_arima = load_data("arima_forecast.csv")
 df_lstm = load_data("lstm_forecast.csv")
@@ -27,18 +42,16 @@ df_sentiment = load_data("crypto_sentiment.csv")
 
 # ---- Streamlit UI ----
 st.title("📈 Cryptocurrency Price Forecasting & Sentiment Analysis")
-st.write("This dashboard shows Bitcoin price trends, forecasts, and sentiment analysis.")
 
 # ---- Live Bitcoin Price ----
 st.subheader("💰 Live Bitcoin Price (USD)")
-
 def get_live_price():
     """Fetches the current Bitcoin price from CoinGecko API."""
     try:
         url = "https://api.coingecko.com/api/v3/simple/price"
         params = {"ids": "bitcoin", "vs_currencies": "usd"}
         response = requests.get(url, params=params)
-        response.raise_for_status()  # Raise HTTP error if status code is not 200
+        response.raise_for_status()  # Raise error for bad status code
         return response.json()["bitcoin"]["usd"]
     except requests.RequestException:
         return None
