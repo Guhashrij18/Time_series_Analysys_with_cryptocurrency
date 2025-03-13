@@ -121,21 +121,6 @@ try:
     st.subheader(f"📢 {sentiment_filter} Tweets")
     st.write(filtered_df[["Tweet", "Sentiment Score"]])
 
-    # ---- AI Chatbot for Bitcoin Analysis ----
-    st.subheader("🤖 Bitcoin AI Chatbot")
-
-    # Set your OpenAI API Key (replace with your key)
-    OPENAI_API_KEY = "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"
-
-    def ask_chatbot(prompt):
-        """Function to query OpenAI's chatbot."""
-        openai.api_key = OPENAI_API_KEY
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response["choices"][0]["message"]["content"]
-
     # Get user input for chatbot
     user_input = st.text_input("💬 Ask anything about Bitcoin...")
     if user_input:
