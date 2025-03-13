@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
+
 # ---- Load Data Function ----
 def load_data(filename, parse_dates=True):
     """Loads a CSV file into a DataFrame with error handling."""
@@ -149,7 +150,8 @@ else:
     def ask_chatbot(prompt):
         """Function to query OpenAI's chatbot."""
         try:
-            client = openai.OpenAI(api_key=OPENAI_API_KEY) 
+            api_key = "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"  # Replace with your real key
+            client = openai.OpenAI(api_key=api_key)
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": prompt}]
