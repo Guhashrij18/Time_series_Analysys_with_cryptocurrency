@@ -11,17 +11,21 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # ---- Load Data Function ----
-def load_data(filename):
+def load_data(filename, parse_dates=True):
     """Loads a CSV file into a DataFrame with error handling."""
     try:
         df = pd.read_csv(filename)
         st.write(f"✅ Successfully loaded `{filename}`")
-        
-        # Check if "Date" column exists
+
+        # Special handling for crypto_sentiment.csv (No Date column)
+        if filename == "crypto_sentiment.csv":
+            return df  # Return as-is
+
+        # Check if "Date" column exists for other files
         if "Date" not in df.columns:
             st.error(f"⚠️ `{filename}` does not have a 'Date' column! Available columns: {list(df.columns)}")
             return None
-        
+
         df["Date"] = pd.to_datetime(df["Date"])  # Convert to datetime
         df.set_index("Date", inplace=True)  # Set Date as index
         return df
@@ -38,7 +42,7 @@ df_prices = load_data("bitcoin_prices.csv")
 df_arima = load_data("arima_forecast.csv")
 df_lstm = load_data("lstm_forecast.csv")
 df_prophet = load_data("prophet_forecast.csv")
-df_sentiment = load_data("crypto_sentiment.csv")
+df_sentiment = load_data("crypto_sentiment.csv", parse_dates=False)  # No Date column
 
 # ---- Streamlit UI ----
 st.title("📈 Cryptocurrency Price Forecasting & Sentiment Analysis")
