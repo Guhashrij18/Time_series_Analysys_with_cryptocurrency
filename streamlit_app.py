@@ -32,12 +32,12 @@ try:
     current_bitcoin_price = get_current_bitcoin_price()
 
     # ---- Streamlit UI ----
-    st.title("📈 Cryptocurrency Price Forecasting & Sentiment Analysis")
+    st.title("Cryptocurrency Price Forecasting & Sentiment Analysis")
     st.write("Analyze Bitcoin trends using ARIMA, LSTM, Prophet, and sentiment analysis from Twitter.")
 
     # ---- Current Bitcoin Price ----
     st.subheader("Current Bitcoin Price (USD)")
-    st.markdown(f"<h2 style='text-align: center; font-weight: bold;'>${current_bitcoin_price:,.2f}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: left; font-weight: bold;'>${current_bitcoin_price:,.2f}</h2>", unsafe_allow_html=True)
 
     # ---- Bitcoin Price Data for the Last 100 Days ----
     st.subheader("Bitcoin Price Trend (Last 100 Days)")
