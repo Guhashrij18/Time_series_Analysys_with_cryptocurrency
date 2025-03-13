@@ -141,6 +141,7 @@ if df_sentiment is not None:
 
 # ---- AI Chatbot for Bitcoin Analysis ----
 st.subheader("🤖 Bitcoin AI Chatbot")
+st.write(f"🔑 OpenAI API Key Loaded: {bool(OPENAI_API_KEY)}")
 
 if not OPENAI_API_KEY:
     st.error("⚠️ OpenAI API key is missing! Set it as an environment variable or in a `.env` file.")
@@ -148,12 +149,12 @@ else:
     def ask_chatbot(prompt):
         """Function to query OpenAI's chatbot."""
         try:
-            
-            response = openai.chatcompletion.create(
+            client = openai.OpenAI(api_key=OPENAI_API_KEY) 
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": prompt}]
             )
-            return response["choices"][0]["message"]["content"] 
+            return response.choices[0].message.content
         except Exception as e:
             return f"⚠️ OpenAI API Error: {str(e)}"
 
