@@ -33,7 +33,7 @@ try:
     st.subheader("Current Bitcoin Price (USD)")
 
     # Display live Bitcoin price with large font and bold
-    st.markdown(f"<h2 style='text-align: center; color: black; font-weight: bold;'>${current_bitcoin_price:,.2f}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: left; font-weight: bold;'>${current_bitcoin_price:,.2f}</h2>", unsafe_allow_html=True)
 
     # ---- Bitcoin Price Data ----
     st.subheader("Bitcoin Price Data")
