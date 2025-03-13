@@ -120,12 +120,3 @@ try:
     # Display Filtered Tweets
     st.subheader(f"📢 {sentiment_filter} Tweets")
     st.write(filtered_df[["Tweet", "Sentiment Score"]])
-
-    # Get user input for chatbot
-    user_input = st.text_input("💬 Ask anything about Bitcoin...")
-    if user_input:
-        answer = ask_chatbot(user_input)
-        st.write(answer)
-
-except FileNotFoundError as e:
-    st.error(f"❌ Error loading data: {e}")
