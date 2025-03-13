@@ -19,36 +19,36 @@ try:
     st.title("Cryptocurrency Price Forecasting & Sentiment Analysis")
     st.write("This dashboard shows Bitcoin price trends, forecasts, and sentiment analysis.")
 
-    # ----  Bitcoin Price Data Table ----
-    st.subheader("Bitcoin Price Data")
-    st.write("Below is the raw Bitcoin price data used for analysis:")
-    st.dataframe(df_prices.tail(100))  # Show last 100 rows of price data
+    # ---- Bitcoin Price Data Table ----
+    st.subheader("Bitcoin Price Data (Last 100 Days)")
+    st.write("This table displays the last 100 days of Bitcoin price data.")
+    st.dataframe(df_prices.tail(100))  # Show last 100 rows
 
     # ---- Bitcoin Price Trend ----
     st.subheader("Bitcoin Price Trend")
     st.line_chart(df_prices["Price"])
 
     # ---- ARIMA Forecast ----
-    st.subheader("🔮 ARIMA Model Prediction")
+    st.subheader("ARIMA Model Prediction")
     fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df_prices.index, df_prices["Price"], label="Actual Price", color="blue")
-    ax.plot(df_arima.index, df_arima["Forecast"], label="ARIMA Forecast", linestyle="dashed", color="red")
+    ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
+    ax.plot(df_arima.index[-100:], df_arima["Forecast"].iloc[-100:], label="ARIMA Forecast", linestyle="dashed", color="red")
     ax.legend()
     st.pyplot(fig)
 
     # ---- LSTM Forecast ----
     st.subheader("LSTM Model Prediction")
     fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df_prices.index, df_prices["Price"], label="Actual Price", color="blue")
-    ax.plot(df_lstm.index, df_lstm["Forecast"], label="LSTM Forecast", linestyle="dashed", color="green")
+    ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
+    ax.plot(df_lstm.index[-100:], df_lstm["Forecast"].iloc[-100:], label="LSTM Forecast", linestyle="dashed", color="green")
     ax.legend()
     st.pyplot(fig)
 
     # ---- Prophet Forecast ----
     st.subheader("Prophet Model Prediction")
     fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df_prices.index, df_prices["Price"], label="Actual Price", color="blue")
-    ax.plot(df_prophet.index, df_prophet["Forecast"], label="Prophet Forecast", linestyle="dashed", color="purple")
+    ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
+    ax.plot(df_prophet.index[-100:], df_prophet["Forecast"].iloc[-100:], label="Prophet Forecast", linestyle="dashed", color="purple")
     ax.legend()
     st.pyplot(fig)
 
@@ -57,8 +57,12 @@ try:
     st.write("Sentiment analysis of Bitcoin-related tweets.")
 
     # Show Sentiment Data
-    st.subheader("🔍 Sentiment Data Preview")
+    st.subheader("Sentiment Data Preview")
     st.write(df_sentiment.head())  # Show first few tweets & scores
+
+    # Show All Tweets in a Table
+    st.subheader("All Collected Tweets")
+    st.dataframe(df_sentiment)  # Show all tweets
 
     # Calculate Sentiment Distribution
     positive_tweets = len(df_sentiment[df_sentiment["Sentiment Score"] > 0])
@@ -83,5 +87,20 @@ try:
     else:
         st.write(f"⚪ **Neutral Market Sentiment** (Score: {avg_sentiment:.2f})")
 
+    # Dropdown to Filter Tweets by Sentiment
+    sentiment_filter = st.selectbox("🔍 Select Sentiment to View Tweets", ["All", "Positive", "Neutral", "Negative"])
+    if sentiment_filter == "Positive":
+        filtered_df = df_sentiment[df_sentiment["Sentiment Score"] > 0]
+    elif sentiment_filter == "Negative":
+        filtered_df = df_sentiment[df_sentiment["Sentiment Score"] < 0]
+    elif sentiment_filter == "Neutral":
+        filtered_df = df_sentiment[df_sentiment["Sentiment Score"] == 0]
+    else:
+        filtered_df = df_sentiment
+
+    # Display Filtered Tweets
+    st.subheader(f"{sentiment_filter} Tweets")
+    st.write(filtered_df[["Tweet", "Sentiment Score"]])
+
 except FileNotFoundError as e:
-    st.error(f"Error loading data: {e}")
+    st.error(f"❌ Error loading data: {e}")
