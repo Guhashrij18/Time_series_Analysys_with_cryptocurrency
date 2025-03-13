@@ -146,16 +146,16 @@ if not OPENAI_API_KEY:
     st.error("⚠️ OpenAI API key is missing! Set it as an environment variable or in a `.env` file.")
 else:
     def ask_chatbot(prompt):
-    """Function to query OpenAI's chatbot."""
-    try:
-        openai.api_key = OPENAI_API_KEY
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response["choices"][0]["message"]["content"]
-    except Exception as e:
-        return f"⚠️ Error: {str(e)}"
+        """Function to query OpenAI's chatbot."""
+        try:
+            openai.api_key = OPENAI_API_KEY
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response["choices"][0]["message"]["content"]
+        except openai.error.OpenAIError as e:
+            return f"⚠ Error: {str(e)}"
 
     # Get user input for chatbot
     user_input = st.text_input("💬 Ask anything about Bitcoin...")
