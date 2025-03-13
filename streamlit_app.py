@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import requests
-import time
-from wordcloud import WordCloud
 import openai
 
 # ---- Load Data ----
@@ -20,11 +18,10 @@ try:
     df_sentiment = pd.read_csv("crypto_sentiment.csv")
 
     # ---- Streamlit UI ----
-    st.title("Cryptocurrency Price Forecasting & Sentiment Analysis")
-    st.write("This dashboard shows Bitcoin price trends, forecasts, and sentiment analysis.")
+    st.title("📈 Cryptocurrency Price Forecasting & Sentiment Analysis")
 
     # ---- Live Bitcoin Price ----
-    st.subheader("Live Bitcoin Price")
+    st.subheader("💰 Live Bitcoin Price")
     
     def get_live_price():
         url = "https://api.coingecko.com/api/v3/simple/price"
@@ -41,11 +38,11 @@ try:
         st.error("Failed to fetch live price. Try again later.")
 
     # ---- Bitcoin Price Data Table ----
-    st.subheader("Bitcoin Price Data (Last 100 Days)")
-    st.dataframe(df_prices.tail(100))  # Show last 100 rows
+    st.subheader("📊 Bitcoin Price Data (Last 100 Days)")
+    st.dataframe(df_prices.tail(100))
 
     # ---- Moving Averages ----
-    st.subheader("Bitcoin Price with Moving Averages")
+    st.subheader("📉 Bitcoin Price with Moving Averages")
     df_prices["SMA_50"] = df_prices["Price"].rolling(window=50).mean()
     df_prices["EMA_20"] = df_prices["Price"].ewm(span=20, adjust=False).mean()
     
@@ -56,60 +53,28 @@ try:
     ax.legend()
     st.pyplot(fig)
 
-    # ---- Bitcoin Price Trend ----
-    st.subheader("Bitcoin Price Trend")
-    st.line_chart(df_prices["Price"])
-
     # ---- Forecasting Period Selection ----
-    st.subheader("Choose Forecasting Period")
+    st.subheader("📅 Choose Forecasting Period")
     forecast_days = st.slider("Select number of days to forecast", min_value=30, max_value=180, step=30, value=60)
+    
     df_arima = df_arima.head(forecast_days)
     df_lstm = df_lstm.head(forecast_days)
     df_prophet = df_prophet.head(forecast_days)
 
-    # ---- ARIMA Forecast ----
-    st.subheader(f"ARIMA Model Prediction for {forecast_days} Days")
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
-    ax.plot(df_arima.index[-100:], df_arima["Forecast"].iloc[-100:], label="ARIMA Forecast", linestyle="dashed", color="red")
-    ax.legend()
-    st.pyplot(fig)
+    # ---- Forecasting Graphs ----
+    st.subheader(f"🔮 Forecasting for {forecast_days} Days")
 
-    # ---- LSTM Forecast ----
-    st.subheader(f"LSTM Model Prediction for {forecast_days} Days")
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
-    ax.plot(df_lstm.index[-100:], df_lstm["Forecast"].iloc[-100:], label="LSTM Forecast", linestyle="dashed", color="green")
-    ax.legend()
-    st.pyplot(fig)
+    models = {"ARIMA": df_arima, "LSTM": df_lstm, "Prophet": df_prophet}
+    for model_name, df_model in models.items():
+        st.subheader(f"{model_name} Model Prediction")
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
+        ax.plot(df_model.index[-100:], df_model["Forecast"].iloc[-100:], label=f"{model_name} Forecast", linestyle="dashed")
+        ax.legend()
+        st.pyplot(fig)
 
-    # ---- Prophet Forecast ----
-    st.subheader(f"Prophet Model Prediction for {forecast_days} Days")
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
-    ax.plot(df_prophet.index[-100:], df_prophet["Forecast"].iloc[-100:], label="Prophet Forecast", linestyle="dashed", color="purple")
-    ax.legend()
-    st.pyplot(fig)
-
-    # ---- Sentiment Analysis ----
-    st.subheader("Crypto Market Sentiment Analysis")
-
-    # Show Sentiment Data
-    st.subheader("Sentiment Data Preview")
-    st.write(df_sentiment.head())
-
-    # Sentiment Word Cloud
-    st.subheader("🌥Bitcoin Sentiment Word Cloud")
-    text = " ".join(tweet for tweet in df_sentiment["Tweet"])
-    wordcloud = WordCloud(width=800, height=400, background_color="black").generate(text)
-
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.imshow(wordcloud, interpolation="bilinear")
-    ax.axis("off")
-    st.pyplot(fig)
-
-    # ---- Overall Market Sentiment (FIXED) ----
-    st.subheader("Overall Crypto Market Sentiment")
+    # ---- Crypto Market Sentiment Analysis ----
+    st.subheader("📢 Overall Crypto Market Sentiment")
 
     avg_sentiment = df_sentiment["Sentiment Score"].mean()
 
@@ -120,9 +85,20 @@ try:
     else:
         st.markdown(f"⚪ **Neutral Market Sentiment** (Score: {avg_sentiment:.2f})")
 
+    # ---- Bar Chart for Sentiment Score Distribution ----
+    st.subheader("📊 Sentiment Score Distribution")
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    df_sentiment["Sentiment Score"].hist(bins=20, edgecolor="black", alpha=0.7, ax=ax)
+    ax.set_xlabel("Sentiment Score")
+    ax.set_ylabel("Frequency")
+    ax.set_title("Distribution of Sentiment Scores")
+
+    st.pyplot(fig)
+
     # ---- AI Chatbot for Crypto Analysis ----
-    st.subheader("Bitcoin AI Chatbot")
-    OPENAI_API_KEY = "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"
+    st.subheader("🤖 Bitcoin AI Chatbot")
+    OPENAI_API_KEY = "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"  # Replace this with your API key
 
     def ask_chatbot(prompt):
         openai.api_key = OPENAI_API_KEY
