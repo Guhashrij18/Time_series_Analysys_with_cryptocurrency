@@ -28,7 +28,7 @@ try:
     current_bitcoin_price = get_current_bitcoin_price()
 
     # ---- Streamlit UI ----
-    st.title("📈 Cryptocurrency Price Forecasting & Sentiment Analysis")
+    st.title("Cryptocurrency Price Forecasting & Sentiment Analysis")
     st.write("Analyze Bitcoin trends using ARIMA, LSTM, Prophet, and sentiment analysis from Twitter.")
 
     # ---- Current Bitcoin Price ----
@@ -45,6 +45,12 @@ try:
 
     # Show last 100 days Bitcoin price data as a table
     st.dataframe(df_last_100_days)
+
+    # ---- Bitcoin Price Trend ----
+    st.subheader("Bitcoin Price Trend (All Data)")
+    
+    # Show full Bitcoin price trend as a line chart
+    st.line_chart(df_prices["Price"])
 
     # ---- ARIMA Forecast ----
     st.subheader("ARIMA Model Prediction")
@@ -102,7 +108,7 @@ try:
         st.write(f"⚪ **Neutral Market Sentiment** (Score: {avg_sentiment:.2f})")
 
     # Dropdown to Filter Tweets by Sentiment
-    sentiment_filter = st.selectbox("🔍 Select Sentiment to View Tweets", ["All", "Positive", "Neutral", "Negative"])
+    sentiment_filter = st.selectbox("Select Sentiment to View Tweets", ["All", "Positive", "Neutral", "Negative"])
     if sentiment_filter == "Positive":
         filtered_df = df_sentiment[df_sentiment["Sentiment Score"] > 0]
     elif sentiment_filter == "Negative":
