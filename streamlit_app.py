@@ -72,3 +72,49 @@ try:
 
     # ---- Sentiment Analysis ----
     st.subheader("Crypto Market Sentiment Analysis")
+    st.write("Sentiment analysis of Bitcoin-related tweets.")
+
+    # Show Sentiment Data
+    st.subheader("Sentiment Data Preview")
+    st.write(df_sentiment.head())  # Show first few tweets & scores
+
+    # Calculate Sentiment Distribution
+    positive_tweets = len(df_sentiment[df_sentiment["Sentiment Score"] > 0])
+    neutral_tweets = len(df_sentiment[df_sentiment["Sentiment Score"] == 0])
+    negative_tweets = len(df_sentiment[df_sentiment["Sentiment Score"] < 0])
+
+    # Show Sentiment Distribution Chart
+    st.subheader("Sentiment Distribution")
+    fig, ax = plt.subplots()
+    ax.bar(["Positive", "Neutral", "Negative"], [positive_tweets, neutral_tweets, negative_tweets], color=["green", "gray", "red"])
+    ax.set_ylabel("Number of Tweets")
+    ax.set_title("Sentiment Analysis of Bitcoin Tweets")
+    st.pyplot(fig)
+
+    # Show Overall Market Sentiment
+    avg_sentiment = df_sentiment["Sentiment Score"].mean()
+    st.subheader("Overall Crypto Market Sentiment")
+    if avg_sentiment > 0:
+        st.write(f"🟢 **Positive Market Sentiment** (Score: {avg_sentiment:.2f})")
+    elif avg_sentiment < 0:
+        st.write(f"🔴 **Negative Market Sentiment** (Score: {avg_sentiment:.2f})")
+    else:
+        st.write(f"⚪ **Neutral Market Sentiment** (Score: {avg_sentiment:.2f})")
+
+    # Dropdown to Filter Tweets by Sentiment
+    sentiment_filter = st.selectbox("🔍 Select Sentiment to View Tweets", ["All", "Positive", "Neutral", "Negative"])
+    if sentiment_filter == "Positive":
+        filtered_df = df_sentiment[df_sentiment["Sentiment Score"] > 0]
+    elif sentiment_filter == "Negative":
+        filtered_df = df_sentiment[df_sentiment["Sentiment Score"] < 0]
+    elif sentiment_filter == "Neutral":
+        filtered_df = df_sentiment[df_sentiment["Sentiment Score"] == 0]
+    else:
+        filtered_df = df_sentiment
+
+    # Display Filtered Tweets
+    st.subheader(f"{sentiment_filter} Tweets")
+    st.write(filtered_df[["Tweet", "Sentiment Score"]])
+
+except FileNotFoundError as e:
+    st.error(f"Error loading data: {e}")
