@@ -108,15 +108,19 @@ try:
     ax.axis("off")
     st.pyplot(fig)
 
-    # ---- Overall Market Sentiment ----
-    avg_sentiment = df_sentiment["Sentiment Score"].mean()
-    st.subheader("Overall Crypto Market Sentiment")
-    if avg_sentiment > 0:
-        st.write(f"🟢 **Positive Market Sentiment** (Score: {avg_sentiment:.2f})")
-    elif avg_sentiment < 0:
-        st.write(f"🔴 **Negative Market Sentiment** (Score: {avg_sentiment:.2f})")
-    else:
-        st.write(f"⚪ **Neutral Market Sentiment** (Score: {avg_sentiment:.2f})")
+   # ---- Overall Market Sentiment ----
+st.subheader("📢 Overall Crypto Market Sentiment")
+
+# Calculate the average sentiment score
+avg_sentiment = df_sentiment["Sentiment Score"].mean()
+
+# Display sentiment status based on the score
+if avg_sentiment > 0:
+    st.markdown(f"🟢 **Positive Market Sentiment** (Score: {avg_sentiment:.2f})")
+elif avg_sentiment < 0:
+    st.markdown(f"🔴 **Negative Market Sentiment** (Score: {avg_sentiment:.2f})")
+else:
+    st.markdown(f"⚪ **Neutral Market Sentiment** (Score: {avg_sentiment:.2f})")
 
     # ---- AI Chatbot for Crypto Analysis ----
     st.subheader("Bitcoin AI Chatbot")
