@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import requests
-import time
-from wordcloud import WordCloud
 
 # ---- Load Data ----
 try:
@@ -13,10 +11,18 @@ try:
     # Load Forecasting Data
     df_arima = pd.read_csv("arima_forecast.csv", parse_dates=["Date"], index_col="Date")
     df_lstm = pd.read_csv("lstm_forecast.csv", parse_dates=["Date"], index_col="Date")
-    df_prophet = pd.read_csv("prophet_forecast.csv", parse_dates=["Date"], index_col="Date")
+    df_prophet = pd.read_csv("prophet_forecast.csv")
 
     # Load Sentiment Data
     df_sentiment = pd.read_csv("crypto_sentiment.csv")
+
+    # ---- Fix Prophet Model Data ----
+    if "Date" in df_prophet.columns and "Forecast" in df_prophet.columns:
+        df_prophet.rename(columns={"Date": "ds", "Forecast": "yhat"}, inplace=True)
+        df_prophet["ds"] = pd.to_datetime(df_prophet["ds"])  # Convert Date column
+        df_prophet.set_index("ds", inplace=True)  # Set Date as index
+    else:
+        st.error("⚠️ Prophet forecast data is missing required columns: 'Date' and 'Forecast'.")
 
     # ---- Streamlit UI ----
     st.title("📈 Cryptocurrency Price Forecasting & Sentiment Analysis")
@@ -41,7 +47,7 @@ try:
 
     # ---- Bitcoin Price Data Table ----
     st.subheader("📋 Bitcoin Price Data (Last 100 Days)")
-    st.dataframe(df_prices.tail(100))  # Show last 100 rows
+    st.dataframe(df_prices.tail(100))
 
     # ---- Moving Averages ----
     st.subheader("📈 Bitcoin Price with Moving Averages")
@@ -82,11 +88,16 @@ try:
     ax.legend()
     st.pyplot(fig)
 
-    # ---- Prophet Forecast ----
+    # ---- Prophet Forecast (Fixed) ----
     st.subheader(f"🔥 Prophet Model Prediction for {forecast_days} Days")
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
-    ax.plot(df_prophet.index[-100:], df_prophet["Forecast"].iloc[-100:], label="Prophet Forecast", linestyle="dashed", color="purple")
+
+    if "yhat" in df_prophet.columns:
+        ax.plot(df_prophet.index[-100:], df_prophet["yhat"].iloc[-100:], label="Prophet Forecast", linestyle="dashed", color="purple")
+    else:
+        st.error("⚠️ Prophet forecast column 'yhat' not found!")
+
     ax.legend()
     st.pyplot(fig)
 
