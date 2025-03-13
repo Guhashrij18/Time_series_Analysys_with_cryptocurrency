@@ -15,7 +15,6 @@ def load_data(filename, parse_dates=True):
     """Loads a CSV file into a DataFrame with error handling."""
     try:
         df = pd.read_csv(filename)
-        st.write(f"✅ Successfully loaded `{filename}`")
 
         # Special handling for crypto_sentiment.csv (No Date column)
         if filename == "crypto_sentiment.csv":
