@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import requests
+import openai
 
 # ---- Load Data ----
 try:
@@ -18,6 +20,23 @@ try:
     # ---- Streamlit UI ----
     st.title("📈 Cryptocurrency Price Forecasting & Sentiment Analysis")
     st.write("This dashboard shows Bitcoin price trends, forecasts, and sentiment analysis.")
+
+    # ---- Live Bitcoin Price ----
+    st.subheader("💰 Live Bitcoin Price (USD)")
+
+    def get_live_price():
+        url = "https://api.coingecko.com/api/v3/simple/price"
+        params = {"ids": "bitcoin", "vs_currencies": "usd"}
+        response = requests.get(url, params=params)
+        if response.status_code == 200:
+            return response.json()["bitcoin"]["usd"]
+        return None
+
+    live_price = get_live_price()
+    if live_price:
+        st.metric(label="Current Bitcoin Price (USD)", value=f"${live_price}")
+    else:
+        st.error("⚠️ Failed to fetch live price. Try again later.")
 
     # ---- Bitcoin Price Data Table ----
     st.subheader("📋 Bitcoin Price Data (Last 100 Days)")
@@ -101,6 +120,27 @@ try:
     # Display Filtered Tweets
     st.subheader(f"📢 {sentiment_filter} Tweets")
     st.write(filtered_df[["Tweet", "Sentiment Score"]])
+
+    # ---- AI Chatbot for Bitcoin Analysis ----
+    st.subheader("🤖 Bitcoin AI Chatbot")
+
+    # Set your OpenAI API Key (replace with your key)
+    OPENAI_API_KEY = "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"
+
+    def ask_chatbot(prompt):
+        """Function to query OpenAI's chatbot."""
+        openai.api_key = OPENAI_API_KEY
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response["choices"][0]["message"]["content"]
+
+    # Get user input for chatbot
+    user_input = st.text_input("💬 Ask anything about Bitcoin...")
+    if user_input:
+        answer = ask_chatbot(user_input)
+        st.write(answer)
 
 except FileNotFoundError as e:
     st.error(f"❌ Error loading data: {e}")
