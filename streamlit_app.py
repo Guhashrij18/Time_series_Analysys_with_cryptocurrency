@@ -26,12 +26,28 @@ try:
     current_bitcoin_price = get_current_bitcoin_price()
 
     # ---- Streamlit UI ----
-    st.title("Cryptocurrency Price Forecasting & Sentiment Analysis")
-    st.write("Analyze Bitcoin trends using ARIMA, LSTM, Prophet, and sentiment analysis from Twitter.")
+st.title("Cryptocurrency Price Forecasting & Sentiment Analysis")
 
-    # ---- Current Bitcoin Price ----
-    st.subheader("Current Bitcoin Price (USD)")
-    st.write(f"The current price of Bitcoin is **${current_bitcoin_price:,.2f}**")
+# ---- Live Bitcoin Price ----
+st.subheader("Live Bitcoin Price (USD)")
+def get_live_price():
+    """Fetches the current Bitcoin price from CoinGecko API."""
+    try:
+        url = "https://api.coingecko.com/api/v3/simple/price"
+        params = {"ids": "bitcoin", "vs_currencies": "usd"}
+        response = requests.get(url, params=params)
+        response.raise_for_status()  # Raise error for bad status code
+        return response.json()["bitcoin"]["usd"]
+    except requests.RequestException:
+        return None
+
+live_price = get_live_price()
+if live_price:
+    st.metric(label="Current Bitcoin Price (USD)", value=f"${live_price}")
+else:
+    st.error("⚠ Failed to fetch live price. Try again later.")
+
+
 
     # ---- Bitcoin Price Data ----
     st.subheader("Bitcoin Price Data")
