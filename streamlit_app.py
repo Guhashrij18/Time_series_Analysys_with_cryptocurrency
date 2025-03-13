@@ -148,12 +148,12 @@ else:
     def ask_chatbot(prompt):
         """Function to query OpenAI's chatbot."""
         try:
-            openai.api_key = OPENAI_API_KEY
-            response = openai.ChatCompletion.create(
+            client = openai.OpenAI(api_key=OPENAI_API_KEY)
+            response = openai.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": prompt}]
             )
-            return response["choices"][0]["message"]["content"]
+            return response.choices[0].message.content 
         except Exception as e:
             return f"⚠️ OpenAI API Error: {str(e)}"
 
