@@ -26,12 +26,12 @@ try:
     current_bitcoin_price = get_current_bitcoin_price()
 
     # ---- Streamlit UI ----
-    st.title("📈 Cryptocurrency Price Forecasting & Sentiment Analysis")
+    st.title("Cryptocurrency Price Forecasting & Sentiment Analysis")
     st.write("Analyze Bitcoin trends using ARIMA, LSTM, Prophet, and sentiment analysis from Twitter.")
 
     # ---- Current Bitcoin Price ----
     st.subheader("Current Bitcoin Price (USD)")
-    st.write(f"💰 The current price of Bitcoin is **${current_bitcoin_price:,.2f}**")
+    st.write(f"The current price of Bitcoin is **${current_bitcoin_price:,.2f}**")
 
     # ---- Bitcoin Price Data ----
     st.subheader("Bitcoin Price Data")
