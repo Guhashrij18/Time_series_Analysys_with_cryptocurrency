@@ -154,8 +154,8 @@ else:
                 messages=[{"role": "user", "content": prompt}]
             )
             return response["choices"][0]["message"]["content"]
-        except openai.error.OpenAIError as e:
-            return f"⚠ Error: {str(e)}"
+        except Exception as e:
+            return f"⚠️ OpenAI API Error: {str(e)}"
 
     # Get user input for chatbot
     user_input = st.text_input("💬 Ask anything about Bitcoin...")
