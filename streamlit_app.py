@@ -16,9 +16,22 @@ try:
     # Load Sentiment Data
     df_sentiment = pd.read_csv("crypto_sentiment.csv")
 
+    # Fetch Current Bitcoin Price from CoinGecko API
+    def get_current_bitcoin_price():
+        url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+        response = requests.get(url)
+        data = response.json()
+        return data["bitcoin"]["usd"]  # Extract the current price
+
+    current_bitcoin_price = get_current_bitcoin_price()
+
     # ---- Streamlit UI ----
     st.title("📈 Cryptocurrency Price Forecasting & Sentiment Analysis")
     st.write("Analyze Bitcoin trends using ARIMA, LSTM, Prophet, and sentiment analysis from Twitter.")
+
+    # ---- Current Bitcoin Price ----
+    st.subheader("Current Bitcoin Price (USD)")
+    st.write(f"💰 The current price of Bitcoin is **${current_bitcoin_price:,.2f}**")
 
     # ---- Bitcoin Price Data ----
     st.subheader("Bitcoin Price Data")
