@@ -2,118 +2,137 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import requests
+import os
+from dotenv import load_dotenv
 
-# ---- Load Data ----
-try:
-    # Load Bitcoin Price Data
-    df_prices = pd.read_csv("bitcoin_prices.csv", parse_dates=["Date"], index_col="Date")
+# ---- Load Environment Variables ----
+load_dotenv()
 
-    # Load Forecasting Data
-    df_arima = pd.read_csv("arima_forecast.csv", parse_dates=["Date"], index_col="Date")
-    df_lstm = pd.read_csv("lstm_forecast.csv", parse_dates=["Date"], index_col="Date")
-    df_prophet = pd.read_csv("prophet_forecast.csv")
+# ---- Load Data Function ----
+def load_data(filename, parse_dates=True):
+    """Loads a CSV file into a DataFrame with error handling."""
+    try:
+        df = pd.read_csv(filename)
 
-    # Load Sentiment Data
-    df_sentiment = pd.read_csv("crypto_sentiment.csv")
+        # Special handling for crypto_sentiment.csv (No Date column)
+        if filename == "crypto_sentiment.csv":
+            return df  # Return as-is
 
-    # ---- Fix Prophet Model Data ----
-    if "Date" in df_prophet.columns and "Forecast" in df_prophet.columns:
-        df_prophet.rename(columns={"Date": "ds", "Forecast": "yhat"}, inplace=True)
-        df_prophet["ds"] = pd.to_datetime(df_prophet["ds"])  # Convert Date column
-        df_prophet.set_index("ds", inplace=True)  # Set Date as index
-    else:
-        st.error("⚠️ Prophet forecast data is missing required columns: 'Date' and 'Forecast'.")
+        # Check if "Date" column exists for other files
+        if "Date" not in df.columns:
+            st.error(f"⚠ {filename} does not have a 'Date' column! Available columns: {list(df.columns)}")
+            return None
 
-    # ---- Streamlit UI ----
-    st.title("📈 Cryptocurrency Price Forecasting & Sentiment Analysis")
-    st.write("This dashboard shows Bitcoin price trends, forecasts, and sentiment analysis.")
+        df["Date"] = pd.to_datetime(df["Date"])  # Convert to datetime
+        df.set_index("Date", inplace=True)  # Set Date as index
+        return df
 
-    # ---- Live Bitcoin Price ----
-    st.subheader("💰 Live Bitcoin Price")
-    
-    def get_live_price():
+    except FileNotFoundError:
+        st.error(f"❌ Error: {filename} not found! Please check the file path.")
+        return None
+    except Exception as e:
+        st.error(f"❌ Error while loading {filename}: {str(e)}")
+        return None
+
+# ---- Load All Data ----
+df_prices = load_data("bitcoin_prices.csv")
+df_arima = load_data("arima_forecast.csv")
+df_lstm = load_data("lstm_forecast.csv")
+df_prophet = load_data("prophet_forecast.csv")
+df_sentiment = load_data("crypto_sentiment.csv", parse_dates=False)  # No Date column
+
+# ---- Streamlit UI ----
+st.title("📈 Cryptocurrency Price Forecasting & Sentiment Analysis")
+
+# ---- Live Bitcoin Price ----
+st.subheader("💰 Live Bitcoin Price (USD)")
+def get_live_price():
+    """Fetches the current Bitcoin price from CoinGecko API."""
+    try:
         url = "https://api.coingecko.com/api/v3/simple/price"
         params = {"ids": "bitcoin", "vs_currencies": "usd"}
         response = requests.get(url, params=params)
-        if response.status_code == 200:
-            return response.json()["bitcoin"]["usd"]
+        response.raise_for_status()  # Raise error for bad status code
+        return response.json()["bitcoin"]["usd"]
+    except requests.RequestException:
         return None
 
-    live_price = get_live_price()
-    if live_price:
-        st.metric(label="Current Bitcoin Price (USD)", value=f"${live_price}")
-    else:
-        st.error("Failed to fetch live price. Try again later.")
+live_price = get_live_price()
+if live_price:
+    st.metric(label="Current Bitcoin Price (USD)", value=f"${live_price}")
+else:
+    st.error("⚠ Failed to fetch live price. Try again later.")
 
-    # ---- Bitcoin Price Data Table ----
+# ---- Bitcoin Price Data Table ----
+if df_prices is not None:
     st.subheader("📋 Bitcoin Price Data (Last 100 Days)")
     st.dataframe(df_prices.tail(100))
-
-    # ---- Moving Averages ----
-    st.subheader("📈 Bitcoin Price with Moving Averages")
-    df_prices["SMA_50"] = df_prices["Price"].rolling(window=50).mean()
-    df_prices["EMA_20"] = df_prices["Price"].ewm(span=20, adjust=False).mean()
-    
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df_prices.index, df_prices["Price"], label="Bitcoin Price", color="blue")
-    ax.plot(df_prices.index, df_prices["SMA_50"], label="50-day SMA", linestyle="dashed", color="red")
-    ax.plot(df_prices.index, df_prices["EMA_20"], label="20-day EMA", linestyle="dashed", color="green")
-    ax.legend()
-    st.pyplot(fig)
 
     # ---- Bitcoin Price Trend ----
     st.subheader("📊 Bitcoin Price Trend")
     st.line_chart(df_prices["Price"])
 
-    # ---- Forecasting Period Selection ----
-    st.subheader("⏳ Choose Forecasting Period")
-    forecast_days = st.slider("Select number of days to forecast", min_value=30, max_value=180, step=30, value=60)
-    df_arima = df_arima.head(forecast_days)
-    df_lstm = df_lstm.head(forecast_days)
-    df_prophet = df_prophet.head(forecast_days)
+    # ---- Forecasting Plots ----
+    def plot_forecast(actual_df, forecast_df, title, color):
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(actual_df.index[-100:], actual_df["Price"].iloc[-100:], label="Actual Price", color="blue")
+        ax.plot(forecast_df.index[-100:], forecast_df["Forecast"].iloc[-100:], label=f"{title} Forecast", linestyle="dashed", color=color)
+        ax.legend()
+        st.pyplot(fig)
 
-    # ---- ARIMA Forecast ----
-    st.subheader(f"🔮 ARIMA Model Prediction for {forecast_days} Days")
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
-    ax.plot(df_arima.index[-100:], df_arima["Forecast"].iloc[-100:], label="ARIMA Forecast", linestyle="dashed", color="red")
-    ax.legend()
-    st.pyplot(fig)
+    if df_arima is not None:
+        st.subheader("🔮 ARIMA Model Prediction")
+        plot_forecast(df_prices, df_arima, "ARIMA", "red")
 
-    # ---- LSTM Forecast ----
-    st.subheader(f"🤖 LSTM Model Prediction for {forecast_days} Days")
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
-    ax.plot(df_lstm.index[-100:], df_lstm["Forecast"].iloc[-100:], label="LSTM Forecast", linestyle="dashed", color="green")
-    ax.legend()
-    st.pyplot(fig)
+    if df_lstm is not None:
+        st.subheader("🤖 LSTM Model Prediction")
+        plot_forecast(df_prices, df_lstm, "LSTM", "green")
 
-    # ---- Prophet Forecast (Fixed) ----
-    st.subheader(f"🔥 Prophet Model Prediction for {forecast_days} Days")
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df_prices.index[-100:], df_prices["Price"].iloc[-100:], label="Actual Price", color="blue")
+    if df_prophet is not None:
+        st.subheader("🔥 Prophet Model Prediction")
+        plot_forecast(df_prices, df_prophet, "Prophet", "purple")
 
-    if "yhat" in df_prophet.columns:
-        ax.plot(df_prophet.index[-100:], df_prophet["yhat"].iloc[-100:], label="Prophet Forecast", linestyle="dashed", color="purple")
-    else:
-        st.error("⚠️ Prophet forecast column 'yhat' not found!")
-
-    ax.legend()
-    st.pyplot(fig)
-
-    # ---- Sentiment Analysis ----
+# ---- Sentiment Analysis ----
+if df_sentiment is not None:
     st.subheader("📢 Crypto Market Sentiment Analysis")
 
     # Show Sentiment Data
     st.subheader("🔍 Sentiment Data Preview")
-    st.write(df_sentiment.head())
+    st.write(df_sentiment.head())  
 
-    # Dropdown to Filter Tweets
+    # Show Sentiment Distribution Chart
+    positive_tweets = len(df_sentiment[df_sentiment["Sentiment Score"] > 0])
+    neutral_tweets = len(df_sentiment[df_sentiment["Sentiment Score"] == 0])
+    negative_tweets = len(df_sentiment[df_sentiment["Sentiment Score"] < 0])
+
+    st.subheader("📊 Sentiment Distribution")
+    fig, ax = plt.subplots()
+    ax.bar(["Positive", "Neutral", "Negative"], [positive_tweets, neutral_tweets, negative_tweets], color=["green", "gray", "red"])
+    ax.set_ylabel("Number of Tweets")
+    ax.set_title("Sentiment Analysis of Bitcoin Tweets")
+    st.pyplot(fig)
+
+    # Show Overall Market Sentiment
+    avg_sentiment = df_sentiment["Sentiment Score"].mean()
+    st.subheader("📢 Overall Crypto Market Sentiment")
+    if avg_sentiment > 0:
+        st.success(f"🟢 *Positive Market Sentiment* (Score: {avg_sentiment:.2f})")
+    elif avg_sentiment < 0:
+        st.error(f"🔴 *Negative Market Sentiment* (Score: {avg_sentiment:.2f})")
+    else:
+        st.info(f"⚪ *Neutral Market Sentiment* (Score: {avg_sentiment:.2f})")
+
+    # Dropdown to Filter Tweets by Sentiment
     sentiment_filter = st.selectbox("🔍 Select Sentiment to View Tweets", ["All", "Positive", "Neutral", "Negative"])
-    filtered_df = df_sentiment[df_sentiment["Sentiment Score"] > 0] if sentiment_filter == "Positive" else \
-                  df_sentiment[df_sentiment["Sentiment Score"] < 0] if sentiment_filter == "Negative" else \
-                  df_sentiment[df_sentiment["Sentiment Score"] == 0] if sentiment_filter == "Neutral" else df_sentiment
-    st.write(filtered_df[["Tweet", "Sentiment Score"]])
+    if sentiment_filter == "Positive":
+        filtered_df = df_sentiment[df_sentiment["Sentiment Score"] > 0]
+    elif sentiment_filter == "Negative":
+        filtered_df = df_sentiment[df_sentiment["Sentiment Score"] < 0]
+    elif sentiment_filter == "Neutral":
+        filtered_df = df_sentiment[df_sentiment["Sentiment Score"] == 0]
+    else:
+        filtered_df = df_sentiment
 
-except FileNotFoundError as e:
-    st.error(f"❌ Error loading data: {e}")
+    # Display Filtered Tweets
+    st.subheader(f"📢 {sentiment_filter} Tweets")
+    st.write(filtered_df[["Tweet", "Sentiment Score"]])
