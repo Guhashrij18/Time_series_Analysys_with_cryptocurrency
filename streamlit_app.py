@@ -117,6 +117,6 @@ else:
     st.write(f"⚪ **Neutral Market Sentiment** (Score: {avg_sentiment:.2f})")
 
 # Auto-refresh the app every 60 seconds
-st.write(f"🔄 **Next update in 60 seconds...**")
+st.write(f"**Next update in 60 seconds...**")
 time.sleep(60)
 st.experimental_rerun()
