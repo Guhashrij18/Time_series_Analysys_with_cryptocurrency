@@ -50,73 +50,64 @@ st.subheader("🔴 Live Bitcoin Price (USD)")
 st.metric(label="Current Bitcoin Price (USD)", value=f"${current_bitcoin_price:,.2f}")
 
 # ---- Bitcoin Price Trend ----
-st.subheader("📈 Bitcoin Price Trend (All Data)")
-st.line_chart(df_prices["Price"])
+if df_prices is not None:
+    st.subheader("📈 Bitcoin Price Trend (All Data)")
+    st.line_chart(df_prices["Price"])
 
 # ---- ARIMA Model Forecast ----
-st.subheader("🔮 ARIMA Model Live Prediction")
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(df_prices.index, df_prices["Price"], label="Actual Price", color="blue")
-ax.plot(df_arima.index, df_arima["Forecast"], label="ARIMA Forecast", linestyle="dashed", color="red")
-ax.legend()
-st.pyplot(fig)
+if df_arima is not None:
+    st.subheader("🔮 ARIMA Model Live Prediction")
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(df_prices.index, df_prices["Price"], label="Actual Price", color="blue")
+    ax.plot(df_arima.index, df_arima["Forecast"], label="ARIMA Forecast", linestyle="dashed", color="red")
+    ax.legend()
+    st.pyplot(fig)
 
 # ---- LSTM Model Forecast ----
-st.subheader("🤖 LSTM Model Live Prediction")
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(df_prices.index, df_prices["Price"], label="Actual Price", color="blue")
-ax.plot(df_lstm.index, df_lstm["Forecast"], label="LSTM Forecast", linestyle="dashed", color="green")
-ax.legend()
-st.pyplot(fig)
+if df_lstm is not None:
+    st.subheader("🤖 LSTM Model Live Prediction")
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(df_prices.index, df_prices["Price"], label="Actual Price", color="blue")
+    ax.plot(df_lstm.index, df_lstm["Forecast"], label="LSTM Forecast", linestyle="dashed", color="green")
+    ax.legend()
+    st.pyplot(fig)
 
 # ---- Prophet Model Forecast ----
-st.subheader("📊 Prophet Model Live Prediction")
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(df_prices.index, df_prices["Price"], label="Actual Price", color="blue")
-ax.plot(df_prophet.index, df_prophet["Forecast"], label="Prophet Forecast", linestyle="dashed", color="purple")
-ax.legend()
-st.pyplot(fig)
+if df_prophet is not None:
+    st.subheader("📊 Prophet Model Live Prediction")
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(df_prices.index, df_prices["Price"], label="Actual Price", color="blue")
+    ax.plot(df_prophet.index, df_prophet["Forecast"], label="Prophet Forecast", linestyle="dashed", color="purple")
+    ax.legend()
+    st.pyplot(fig)
 
 # ---- Live Sentiment Analysis ----
-st.subheader("📢 Live Sentiment Analysis of Bitcoin Tweets")
-st.write("Tracking the latest sentiment analysis based on Bitcoin-related tweets.")
+if df_sentiment is not None:
+    st.subheader("📢 Live Sentiment Analysis of Bitcoin Tweets")
+    st.write("Tracking the latest sentiment analysis based on Bitcoin-related tweets.")
 
-# Sentiment Data Summary
-positive_tweets = len(df_sentiment[df_sentiment["Sentiment Score"] > 0])
-neutral_tweets = len(df_sentiment[df_sentiment["Sentiment Score"] == 0])
-negative_tweets = len(df_sentiment[df_sentiment["Sentiment Score"] < 0])
+    # Sentiment Data Summary
+    positive_tweets = len(df_sentiment[df_sentiment["Sentiment Score"] > 0])
+    neutral_tweets = len(df_sentiment[df_sentiment["Sentiment Score"] == 0])
+    negative_tweets = len(df_sentiment[df_sentiment["Sentiment Score"] < 0])
 
-# Sentiment Bar Chart
-st.subheader("Sentiment Distribution")
-fig, ax = plt.subplots()
-ax.bar(["Positive", "Neutral", "Negative"], [positive_tweets, neutral_tweets, negative_tweets], color=["green", "gray", "red"])
-ax.set_ylabel("Number of Tweets")
-ax.set_title("Sentiment Analysis of Bitcoin Tweets")
-st.pyplot(fig)
+    # Sentiment Bar Chart
+    st.subheader("Sentiment Distribution")
+    fig, ax = plt.subplots()
+    ax.bar(["Positive", "Neutral", "Negative"], [positive_tweets, neutral_tweets, negative_tweets], color=["green", "gray", "red"])
+    ax.set_ylabel("Number of Tweets")
+    ax.set_title("Sentiment Analysis of Bitcoin Tweets")
+    st.pyplot(fig)
 
-# Overall Sentiment Score
-avg_sentiment = df_sentiment["Sentiment Score"].mean()
-st.subheader("📰 Overall Market Sentiment")
-if avg_sentiment > 0:
-    st.success(f"🟢 *Positive Market Sentiment* (Score: {avg_sentiment:.2f})")
-elif avg_sentiment < 0:
-    st.error(f"🔴 *Negative Market Sentiment* (Score: {avg_sentiment:.2f})")
-else:
-    st.warning(f"⚪ *Neutral Market Sentiment* (Score: {avg_sentiment:.2f})")
-
-# Show latest tweets
-st.subheader("📌 Latest Tweets & Sentiment")
-sentiment_filter = st.selectbox("Filter Tweets by Sentiment", ["All", "Positive", "Neutral", "Negative"])
-if sentiment_filter == "Positive":
-    filtered_df = df_sentiment[df_sentiment["Sentiment Score"] > 0]
-elif sentiment_filter == "Negative":
-    filtered_df = df_sentiment[df_sentiment["Sentiment Score"] < 0]
-elif sentiment_filter == "Neutral":
-    filtered_df = df_sentiment[df_sentiment["Sentiment Score"] == 0]
-else:
-    filtered_df = df_sentiment
-
-st.write(filtered_df[["Tweet", "Sentiment Score"]].head(10))  # Show 10 recent tweets
+    # Overall Sentiment Score
+    avg_sentiment = df_sentiment["Sentiment Score"].mean()
+    st.subheader("📰 Overall Market Sentiment")
+    if avg_sentiment > 0:
+        st.success(f"🟢 *Positive Market Sentiment* (Score: {avg_sentiment:.2f})")
+    elif avg_sentiment < 0:
+        st.error(f"🔴 *Negative Market Sentiment* (Score: {avg_sentiment:.2f})")
+    else:
+        st.warning(f"⚪ *Neutral Market Sentiment* (Score: {avg_sentiment:.2f})")
 
 # ---- Footer ----
 st.markdown("🚀 Developed by Your Name | Powered by Streamlit, Plotly & Machine Learning")
