@@ -28,7 +28,7 @@ df_prices = load_data("bitcoin_prices.csv")
 df_arima = load_data("arima_forecast.csv")
 df_lstm = load_data("lstm_forecast.csv")
 df_prophet = load_data("prophet_forecast.csv")
-df_sentiment = pd.read_csv("crypto_sentiment1.csv")  # Sentiment data (no date column)
+df_sentiment = pd.read_csv("crypto_sentiment.csv")  # Sentiment data (no date column)
 
 # Fetch Current Bitcoin Price (updates every 60 sec)
 current_bitcoin_price = get_current_bitcoin_price()
