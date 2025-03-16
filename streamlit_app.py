@@ -2,10 +2,8 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import requests
-import joblib
-from sklearn.preprocessing import MinMaxScaler
 
-# 🚀 Set Streamlit Page Configuration (Must be the first Streamlit command)
+# 🚀 Set Streamlit Page Configuration
 st.set_page_config(page_title="Live Crypto Predictions", layout="wide")
 
 # ---- Cache the Live Bitcoin Price ----
@@ -23,15 +21,10 @@ def load_data():
         df_prices = pd.read_csv("bitcoin_prices.csv", parse_dates=["Date"], index_col="Date")
         df_sentiment = pd.read_csv("crypto_sentiment.csv")
 
-        # Load Forecast Data (Corrected)
+        # ✅ Load Forecast Data (No Scaling Required)
         df_arima = pd.read_csv("arima_forecast_corrected.csv", parse_dates=["Date"], index_col="Date")
         df_lstm = pd.read_csv("lstm_forecast_corrected.csv", parse_dates=["Date"], index_col="Date")
         df_prophet = pd.read_csv("prophet_forecast_corrected.csv", parse_dates=["Date"], index_col="Date")
-
-        # ✅ Load MinMaxScaler for Inverse Transformation
-        scaler = joblib.load("scaler.pkl")
-        df_lstm["Forecast"] = scaler.inverse_transform(df_lstm[["Forecast"]])
-        df_prophet["Forecast"] = scaler.inverse_transform(df_prophet[["Forecast"]])
 
         return df_prices, df_arima, df_lstm, df_prophet, df_sentiment
     except Exception as e:
