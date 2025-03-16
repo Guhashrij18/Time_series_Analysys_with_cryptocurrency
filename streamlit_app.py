@@ -26,7 +26,7 @@ def load_data(filename):
 # ---- Load Data ----
 df_prices = load_data("bitcoin_prices.csv")
 df_arima = load_data("arima_forecast.csv")
-df_lstm = load_data("lstm_forecast.csv")
+df_lstm = load_data("lstm_forecast_corrected.csv")
 df_prophet = load_data("prophet_forecast.csv")
 df_sentiment = pd.read_csv("crypto_sentiment.csv")  # Sentiment data (no date column)
 
