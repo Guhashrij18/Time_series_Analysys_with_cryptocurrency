@@ -1,6 +1,7 @@
 streamlit
 matplotlib
 pandas
+plotly
 numpy
 scikit-learn
 statsmodels
@@ -10,3 +11,4 @@ nltk
 wordcloud
 openai
 python-dotenv
+
