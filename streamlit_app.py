@@ -32,23 +32,23 @@ try:
 
     # ---- Streamlit UI ----
     st.set_page_config(page_title="Bitcoin Forecast & Sentiment Analysis", layout="wide")
-    st.title("📊 Cryptocurrency Live Forecast & Sentiment Analysis")
+    st.title("Cryptocurrency Live Forecast & Sentiment Analysis")
     st.write("Analyze Bitcoin trends using ARIMA, LSTM, Prophet, and sentiment analysis.")
 
     # ---- Current Bitcoin Price ----
-    st.subheader("🔴 Live Bitcoin Price (USD)")
+    st.subheader("Live Bitcoin Price (USD)")
     st.markdown(f"<h2 style='text-align: left; font-weight: bold;'>${current_bitcoin_price:,.2f}</h2>", unsafe_allow_html=True)
 
     # ---- Bitcoin Price Data (Last 100 Days) ----
-    st.subheader("📈 Bitcoin Price Data (Last 100 Days)")
+    st.subheader("Bitcoin Price Data (Last 100 Days)")
     st.dataframe(df_prices.tail(100))
 
     # ---- Bitcoin Price Trend ----
-    st.subheader("📊 Bitcoin Price Trend (All Data)")
+    st.subheader("Bitcoin Price Trend (All Data)")
     st.line_chart(df_prices["Price"])
 
     # ---- ARIMA Forecast ----
-    st.subheader("🔮 ARIMA Model Prediction")
+    st.subheader("ARIMA Model Prediction")
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(df_prices.index, df_prices["Price"], label="Actual Price", color="blue")
     ax.plot(df_arima.index, df_arima["Forecast"], label="ARIMA Forecast", linestyle="dashed", color="red")
@@ -56,7 +56,7 @@ try:
     st.pyplot(fig)
 
     # ---- LSTM Forecast ----
-    st.subheader("🤖 LSTM Model Prediction")
+    st.subheader("LSTM Model Prediction")
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(df_prices.index, df_prices["Price"], label="Actual Price", color="blue")
     ax.plot(df_lstm.index, df_lstm["Forecast"], label="LSTM Forecast", linestyle="dashed", color="green")
@@ -64,7 +64,7 @@ try:
     st.pyplot(fig)
 
     # ---- Prophet Forecast ----
-    st.subheader("🔥 Prophet Model Prediction")
+    st.subheader("Prophet Model Prediction")
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(df_prices.index, df_prices["Price"], label="Actual Price", color="blue")
     ax.plot(df_prophet.index, df_prophet["Forecast"], label="Prophet Forecast", linestyle="dashed", color="purple")
@@ -72,11 +72,11 @@ try:
     st.pyplot(fig)
 
     # ---- Sentiment Analysis ----
-    st.subheader("📢 Crypto Market Sentiment Analysis")
+    st.subheader("Crypto Market Sentiment Analysis")
     st.write("Sentiment analysis of Bitcoin-related tweets.")
 
     # Show Sentiment Data
-    st.subheader("📊 Sentiment Data Preview")
+    st.subheader("Sentiment Data Preview")
     st.write(df_sentiment.tail(10))  # Show last few tweets & scores
 
     # Calculate Sentiment Distribution
@@ -85,7 +85,7 @@ try:
     negative_tweets = len(df_sentiment[df_sentiment["Avg Sentiment Score"] < 0])
 
     # Show Sentiment Distribution Chart
-    st.subheader("📊 Sentiment Distribution")
+    st.subheader("Sentiment Distribution")
     fig, ax = plt.subplots()
     ax.bar(["Positive", "Neutral", "Negative"], [positive_tweets, neutral_tweets, negative_tweets], color=["green", "gray", "red"])
     ax.set_ylabel("Number of Tweets")
@@ -94,7 +94,7 @@ try:
 
     # Show Overall Market Sentiment
     avg_sentiment = df_sentiment["Avg Sentiment Score"].mean()
-    st.subheader("📢 Overall Crypto Market Sentiment")
+    st.subheader("Overall Crypto Market Sentiment")
     if avg_sentiment > 0:
         st.write(f"🟢 **Positive Market Sentiment** (Score: {avg_sentiment:.2f})")
     elif avg_sentiment < 0:
@@ -118,4 +118,4 @@ try:
     st.write(filtered_df[["Date", "Tweet", "Avg Sentiment Score"]])
 
 except FileNotFoundError as e:
-    st.error(f"❌ Error loading data: {e}")
+    st.error(f"Error loading data: {e}")
