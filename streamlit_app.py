@@ -22,7 +22,7 @@ try:
     df_prophet = pd.read_csv("prophet_forecast.csv", parse_dates=["Date"], index_col="Date")
 
     # Load Sentiment Data
-    df_sentiment = pd.read_csv("crypto_sentiment.csv")
+    df_sentiment = pd.read_csv("crypto_sentiment1.csv")
 
     # Rename "Sentiment Score" to "Avg Sentiment Score"
     df_sentiment.rename(columns={"Sentiment Score": "Avg Sentiment Score"}, inplace=True)
