@@ -109,7 +109,7 @@ if df_sentiment is not None:
         st.info(f"⚪ **Neutral Market Sentiment** (Score: {avg_sentiment:.2f})")
 
     # Dropdown to Filter Tweets by Sentiment
-    sentiment_filter = st.selectbox("🔍 Select Sentiment to View Tweets", ["All", "Positive", "Neutral", "Negative"])
+    sentiment_filter = st.selectbox("Select Sentiment to View Tweets", ["All", "Positive", "Neutral", "Negative"])
     if sentiment_filter == "Positive":
         filtered_df = df_sentiment[df_sentiment["Avg Sentiment Score"] > 0]
     elif sentiment_filter == "Negative":
