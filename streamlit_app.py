@@ -15,7 +15,13 @@ def get_current_bitcoin_price():
         response.raise_for_status()  # Raise an error for bad responses
         data = response.json()
         return data.get("bitcoin", {}).get("usd", None)  # Return None if price is missing
-    except (requests.RequestException, ValueError) as e:
+    except requests.exceptions.HTTPError as e:
+        if response.status_code == 429:
+            st.warning("⚠️ Too Many Requests. Please try again later.")
+        else:
+            st.error(f"⚠️ API Error: {e}")
+        return None
+    except requests.RequestException as e:
         st.error(f"⚠️ Error fetching Bitcoin price: {e}")
         return None
 
@@ -44,9 +50,18 @@ df_prophet = load_csv("prophet_forecast.csv")
 
 # Load Sentiment Data (No Date Parsing)
 df_sentiment = load_csv("crypto_sentiment.csv", parse_dates=None)
+
+# Ensure Sentiment DataFrame has required columns
 if df_sentiment is not None:
-    df_sentiment.rename(columns={"Sentiment Score": "Avg Sentiment Score"}, inplace=True)
-    df_sentiment["Avg Sentiment Score"].fillna(0, inplace=True)  # Replace NaN with 0
+    required_columns = {"Date", "Tweet", "Sentiment Score", "Avg Sentiment Score"}
+    if not required_columns.issubset(df_sentiment.columns):
+        st.warning("⚠️ Sentiment data is missing required columns. Showing default empty data.")
+        df_sentiment = pd.DataFrame(columns=list(required_columns))  # Default empty DataFrame
+    else:
+        df_sentiment.rename(columns={"Sentiment Score": "Avg Sentiment Score"}, inplace=True)
+        df_sentiment["Avg Sentiment Score"].fillna(0, inplace=True)  # Replace NaN with 0
+else:
+    df_sentiment = pd.DataFrame(columns=["Date", "Tweet", "Avg Sentiment Score"])
 
 # Fetch Current Bitcoin Price
 current_bitcoin_price = get_current_bitcoin_price()
@@ -89,7 +104,7 @@ plot_forecast(df_prices, df_lstm, "LSTM Forecast", "green")
 plot_forecast(df_prices, df_prophet, "Prophet Forecast", "purple")
 
 # ---- Sentiment Analysis ----
-if df_sentiment is not None:
+if not df_sentiment.empty:
     st.subheader("🧐 Crypto Market Sentiment Analysis")
 
     # Show Sentiment Data
@@ -120,18 +135,19 @@ if df_sentiment is not None:
 
     # Dropdown to Filter Tweets by Sentiment
     sentiment_filter = st.selectbox("📌 Select Sentiment to View Tweets", ["All", "Positive", "Neutral", "Negative"])
-    if sentiment_filter == "Positive":
-        filtered_df = df_sentiment[df_sentiment["Avg Sentiment Score"] > 0]
-    elif sentiment_filter == "Negative":
-        filtered_df = df_sentiment[df_sentiment["Avg Sentiment Score"] < 0]
-    elif sentiment_filter == "Neutral":
-        filtered_df = df_sentiment[df_sentiment["Avg Sentiment Score"] == 0]
+    if sentiment_filter != "All":
+        filtered_df = df_sentiment[df_sentiment["Avg Sentiment Score"] > 0] if sentiment_filter == "Positive" else \
+                      df_sentiment[df_sentiment["Avg Sentiment Score"] < 0] if sentiment_filter == "Negative" else \
+                      df_sentiment[df_sentiment["Avg Sentiment Score"] == 0]
     else:
         filtered_df = df_sentiment
 
     # Display Filtered Tweets
-    st.subheader(f"📝 {sentiment_filter} Tweets")
-    st.write(filtered_df[["Date", "Tweet", "Avg Sentiment Score"]])
+    if not filtered_df.empty:
+        st.subheader(f"📝 {sentiment_filter} Tweets")
+        st.write(filtered_df[["Date", "Tweet", "Avg Sentiment Score"]])
+    else:
+        st.warning("⚠️ No tweets available for this category.")
 
 else:
     st.warning("⚠️ Sentiment data not available!")
