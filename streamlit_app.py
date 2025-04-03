@@ -53,12 +53,12 @@ df_sentiment = load_csv("crypto_sentiment.csv", parse_dates=None)
 
 # Ensure Sentiment DataFrame has required columns
 if df_sentiment is not None:
-    required_columns = {"Date", "Tweet", "Sentiment Score", "Avg Sentiment Score"}
+    required_columns = {"Date", "Tweet", "Avg Sentiment Score"}
     if not required_columns.issubset(df_sentiment.columns):
         st.warning("⚠️ Sentiment data is missing required columns. Showing default empty data.")
         df_sentiment = pd.DataFrame(columns=list(required_columns))  # Default empty DataFrame
     else:
-        df_sentiment.rename(columns={"Sentiment Score": "Avg Sentiment Score"}, inplace=True)
+        df_sentiment.rename(columns={"Avg Sentiment Score"}, inplace=True)
         df_sentiment["Avg Sentiment Score"].fillna(0, inplace=True)  # Replace NaN with 0
 else:
     df_sentiment = pd.DataFrame(columns=["Date", "Tweet", "Avg Sentiment Score"])
