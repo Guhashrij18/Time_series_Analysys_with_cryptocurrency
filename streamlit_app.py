@@ -7,36 +7,44 @@ import time
 # ---- Set Page Configuration ----
 st.set_page_config(page_title="Bitcoin Forecast & Sentiment Analysis", layout="wide")
 
-# ---- Fetch Bitcoin Price with Error Handling ----
+# ---- Fetch Bitcoin Price (Handles API Rate Limits) ----
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def get_current_bitcoin_price():
     url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
 
-    for _ in range(3):  # Retry up to 3 times
+    for attempt in range(3):  # Retry up to 3 times
         try:
-            response = requests.get(url)
+            response = requests.get(url, headers=headers)
+            if response.status_code == 429:  # Too Many Requests
+                st.warning("⚠️ API rate limit exceeded. Retrying in 5 seconds...")
+                time.sleep(5)
+                continue
+            
             response.raise_for_status()
             data = response.json()
-            price = data.get("bitcoin", {}).get("usd")
-            if price is not None:
-                return price
-        except requests.exceptions.RequestException:
-            time.sleep(2)  # Wait before retrying
+            return data.get("bitcoin", {}).get("usd", "N/A")
 
-    st.warning("⚠️ Bitcoin price could not be retrieved. Please try again later.")
+        except requests.exceptions.RequestException as e:
+            st.error(f"⚠️ Error fetching Bitcoin price: {str(e)}")
+            time.sleep(2)  # Delay before retrying
+
     return None  # Return None if price cannot be retrieved
 
 # ---- Load CSV Data with Error Handling ----
 def load_csv(filename, parse_dates=["Date"]):
     try:
-        df = pd.read_csv(filename, parse_dates=parse_dates, index_col="Date")
+        df = pd.read_csv(filename, parse_dates=parse_dates)
         return df
     except FileNotFoundError:
         st.error(f"⚠️ Error: `{filename}` not found!")
-        return None
+        return pd.DataFrame()  # Return empty DataFrame
     except Exception as e:
         st.error(f"⚠️ Error loading `{filename}`: {str(e)}")
-        return None
+        return pd.DataFrame()
 
 # Load Data
 df_prices = load_csv("bitcoin_prices.csv")
@@ -49,15 +57,18 @@ try:
     df_sentiment = pd.read_csv("crypto_sentiment.csv")
 
     required_columns = {"Date", "Avg Sentiment Score", "Tweet"}
-    if not required_columns.issubset(df_sentiment.columns):
-        st.error("⚠️ Sentiment data is missing required columns. Displaying default empty data.")
+    missing_cols = required_columns - set(df_sentiment.columns)
+
+    if missing_cols:
+        st.error(f"⚠️ Sentiment data is missing columns: {', '.join(missing_cols)}. Displaying empty data.")
         df_sentiment = pd.DataFrame(columns=list(required_columns))
 
-    df_sentiment["Avg Sentiment Score"].fillna(0, inplace=True)  # Handle NaN values
+    # Ensure correct data types
+    df_sentiment["Avg Sentiment Score"] = pd.to_numeric(df_sentiment["Avg Sentiment Score"], errors="coerce").fillna(0)
 
 except FileNotFoundError:
     st.error("⚠️ Error: `crypto_sentiment.csv` not found!")
-    df_sentiment = None
+    df_sentiment = pd.DataFrame(columns=["Date", "Avg Sentiment Score", "Tweet"])
 
 # Fetch Bitcoin Price
 current_bitcoin_price = get_current_bitcoin_price()
@@ -74,7 +85,7 @@ else:
     st.warning("⚠️ Bitcoin price could not be retrieved. Please try again later.")
 
 # ---- Bitcoin Price Data ----
-if df_prices is not None:
+if not df_prices.empty:
     st.subheader("📊 Bitcoin Price Data (Last 100 Days)")
     st.dataframe(df_prices.tail(100))
 
@@ -85,10 +96,10 @@ if df_prices is not None:
 # ---- Forecasting Models ----
 def plot_forecast(actual_df, forecast_df, title, color):
     """Helper function to plot forecast models."""
-    if actual_df is not None and forecast_df is not None:
+    if not actual_df.empty and not forecast_df.empty:
         fig, ax = plt.subplots(figsize=(10, 5))
-        ax.plot(actual_df.index, actual_df["Price"], label="Actual Price", color="blue")
-        ax.plot(forecast_df.index, forecast_df["Forecast"], label=title, linestyle="dashed", color=color)
+        ax.plot(actual_df["Date"], actual_df["Price"], label="Actual Price", color="blue")
+        ax.plot(forecast_df["Date"], forecast_df["Forecast"], label=title, linestyle="dashed", color=color)
         ax.legend()
         st.pyplot(fig)
 
@@ -98,7 +109,7 @@ plot_forecast(df_prices, df_lstm, "LSTM Forecast", "green")
 plot_forecast(df_prices, df_prophet, "Prophet Forecast", "purple")
 
 # ---- Sentiment Analysis ----
-if df_sentiment is not None and not df_sentiment.empty:
+if not df_sentiment.empty:
     st.subheader("🗣️ Crypto Market Sentiment Analysis")
 
     # Show Sentiment Data
